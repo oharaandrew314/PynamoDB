@@ -18,6 +18,7 @@ from pynamodb.constants import (
 from pynamodb.compat import getmembers_issubclass
 from pynamodb.expressions.operand import Path
 import collections
+from enum import Enum
 
 
 class Attribute(object):
@@ -945,6 +946,28 @@ class ListAttribute(Attribute):
             attr_value = _get_value_for_deserialize(v)
             deserialized_lst.append(class_for_deserialize.deserialize(attr_value))
         return deserialized_lst
+
+
+class EnumAttribute(UnicodeAttribute):
+    """
+    An enumerated unicode attribute
+    """
+    attr_type = STRING
+
+    def __init__(self, enum_type, *args, **kwargs):
+        super(EnumAttribute, self).__init__(*args, **kwargs)
+        self.enum_type = enum_type
+
+    def serialize(self, value):
+        """ Raises ValueError if input value not in ENUM, otherwise continues as parent class """
+        if not isinstance(value, Enum):
+            raise ValueError("{0} must be an enum.  Got {1}".format(self.attr_name, type(value)))
+        else:
+            return UnicodeAttribute.serialize(self, value.name)
+
+    def deserialize(self, value):
+        return self.enum_type[value]
+
 
 DESERIALIZE_CLASS_MAP = {
     LIST_SHORT: ListAttribute(),

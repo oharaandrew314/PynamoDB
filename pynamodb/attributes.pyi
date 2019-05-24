@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, Generic, Iterable, List, Mapping, Optional, Text, Type, TypeVar, Union, Set, overload
 
 from datetime import datetime
+from enum import Enum
 
 from pynamodb.expressions.condition import (
     BeginsWith, Between, Comparison, Contains, NotExists, Exists, In
@@ -161,6 +162,12 @@ class ListAttribute(Generic[_T], Attribute[List[_T]]):
     def __get__(self: _A, instance: None, owner: Any) -> _A: ...
     @overload
     def __get__(self, instance: Any, owner: Any) -> List[_T]: ...
+
+class EnumAttribute(Attribute[Enum]):
+    @overload
+    def __get__(self: _A, instance: None, owner: Any) -> _A: ...
+    @overload
+    def __get__(self, instance: Any, owner: Any) -> Enum: ...
 
 DESERIALIZE_CLASS_MAP: Dict[Text, Attribute]
 SERIALIZE_CLASS_MAP: Dict[Type, Attribute]

@@ -10,6 +10,8 @@ from datetime import datetime
 from dateutil.parser import parse
 from dateutil.tz import tzutc
 
+from enum import Enum
+
 from mock import patch, Mock, call
 import pytest
 
@@ -17,7 +19,7 @@ from pynamodb.attributes import (
     BinarySetAttribute, BinaryAttribute, NumberSetAttribute, NumberAttribute,
     UnicodeAttribute, UnicodeSetAttribute, UTCDateTimeAttribute, BooleanAttribute, LegacyBooleanAttribute,
     MapAttribute, MapAttributeMeta, ListAttribute, JSONAttribute, _get_value_for_deserialize,
-    _fast_parse_utc_datestring,
+    _fast_parse_utc_datestring, EnumAttribute
 )
 from pynamodb.constants import (
     DATETIME_FORMAT, DEFAULT_ENCODING, NUMBER, STRING, STRING_SET, NUMBER_SET, BINARY_SET,
@@ -995,3 +997,37 @@ class TestMapAndListAttribute:
         assert deserialized == inp
         assert serialize_mock.call_args_list == [call(1), call(2)]
         assert deserialize_mock.call_args_list == [call('1'), call('2')]
+
+
+class TesEnumAttribute:
+
+    class TestEnum(Enum):
+        SPAM = 1
+        HAM = 2
+
+    def test_enum_attribute(self):
+        """
+        EnumAttribute.default
+        """
+        attr = EnumAttribute(self.TestEnum)
+        assert attr is not None
+        assert attr.attr_type == STRING
+
+        attr = EnumAttribute(self.TestEnum, default=self.TestEnum.SPAM)
+        assert attr.default == self.TestEnum.SPAM
+
+    def test_enum_serialize(self):
+        """
+        EnumAttribute.serialize
+        """
+        attr = EnumAttribute(self.TestEnum)
+        assert attr.serialize(self.TestEnum.SPAM) == 'SPA'
+        assert attr.serialize(self.TestEnum.HAM) == 'HAM'
+
+    def test_enum_deserialize(self):
+        """
+        EnumAttribute.deserialize
+        """
+        attr = EnumAttribute()
+        assert attr.deserialize('SPAM') == self.TestEnum.SPAM
+        assert attr.deserialize('HAM') == self.TestEnum.HAM
